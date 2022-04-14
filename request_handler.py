@@ -1,5 +1,5 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
-
+from views import get_all_entries, get_single_entry
 
 # Here's a class. It inherits from another class.
 # For now, think of a class as a container for functions that
@@ -10,6 +10,40 @@ class HandleRequests(BaseHTTPRequestHandler):
     # It gives a description of the class or function
     """Controls the functionality of any GET, PUT, POST, DELETE requests to the server
     """
+    def parse_url(self, path):
+        '''docstring'''
+        # Just like splitting a string in JavaScript. If the
+        # path is "/animals/1", the resulting list will
+        # have "" at index 0, "animals" at index 1, and "1"
+        # at index 2.
+        path_params = path.split("/")
+        resource = path_params[1]
+        # id = None
+
+        # Check if there is a query string parameter
+        if "?" in resource:
+            # GIVEN: /customers?email=jenna@solis.com
+
+            param = resource.split("?")[1]  # email=jenna@solis.com
+            resource = resource.split("?")[0]  # 'customers'
+            pair = param.split("=")  # [ 'email', 'jenna@solis.com' ]
+            key = pair[0]  # 'email'
+            value = pair[1]  # 'jenna@solis.com'
+
+            return ( resource, key, value )
+
+        # No query string parameter
+        else:
+            id = None
+
+            try:
+                id = int(path_params[2])
+            except IndexError:
+                pass  # No route parameter exists: /animals
+            except ValueError:
+                pass  # Request had trailing slash: /animals/
+
+            return (resource, id)
 
     # Here's a class function
     def _set_headers(self, status):
@@ -46,20 +80,41 @@ class HandleRequests(BaseHTTPRequestHandler):
         # Your new console.log() that outputs to the terminal
         print(self.path)
 
-        # It's an if..else statement
-        # if self.path == "/animals":
-        #     # In Python, this is a list of dictionaries
-        #     # In JavaScript, you would call it an array of objects
-        #     response = [
-        #         {"id": 1, "name": "Snickers", "species": "Dog"},
-        #         {"id": 2, "name": "Lenny", "species": "Cat"}
-        #     ]
+        # Parse URL and store entire tuple in a variable
+        parsed = self.parse_url(self.path)
+        
+        # Response from parse_url() is a tuple with 2
+        # items in it, which means the request was for
+        # `/animals` or `/animals/2`
+        if len(parsed) == 2:
+            (resource, id) = parsed
 
-        # else:
-        #     response = []
+            # It's an if..else statement
+            if resource == "entries":
+                if id is not None:
+                    response = f"{get_single_entry(id)}"
 
+                else:
+                    response = f"{get_all_entries()}"
+
+        # elif len(parsed) == 3:
+        #     ( resource, key, value) = parsed
+
+            # Is the resource `customers` and was there a
+            # query parameter that specified the customer
+            # email as a filtering value?
+            # if key == "email" and resource == "customers":
+            #     response = get_customers_by_email(value)
+
+            # if key == "location_id" and resource == "animals":
+            #     response = get_animals_by_location(value)
+            # if key == "status" and resource == "animals":
+            #     response = get_animals_by_status(value)
+
+            # if key == "location_id" and resource == "employees":
+            #     response = get_employees_by_location(value)
         # This weird code sends a response back to the client
-        # self.wfile.write(f"{response}".encode())
+        self.wfile.write(f"{response}".encode())
 
     # Here's a method on the class that overrides the parent's method.
     # It handles any POST request.
