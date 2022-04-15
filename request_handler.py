@@ -1,5 +1,8 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from views import get_all_entries, get_single_entry
+import json
+from views import get_all_entries, get_single_entry, delete_entry
+from views import get_all_moods
+from views.entry_requests import get_entry_by_search, create_journal_entry, update_entry
 
 # Here's a class. It inherits from another class.
 # For now, think of a class as a container for functions that
@@ -97,23 +100,15 @@ class HandleRequests(BaseHTTPRequestHandler):
                 else:
                     response = f"{get_all_entries()}"
 
-        # elif len(parsed) == 3:
-        #     ( resource, key, value) = parsed
+            if resource == "moods":
+                response = f"{get_all_moods()}"
 
-            # Is the resource `customers` and was there a
-            # query parameter that specified the customer
-            # email as a filtering value?
-            # if key == "email" and resource == "customers":
-            #     response = get_customers_by_email(value)
+        elif len(parsed) == 3:
+            (resource, key, value) = parsed
 
-            # if key == "location_id" and resource == "animals":
-            #     response = get_animals_by_location(value)
-            # if key == "status" and resource == "animals":
-            #     response = get_animals_by_status(value)
-
-            # if key == "location_id" and resource == "employees":
-            #     response = get_employees_by_location(value)
-        # This weird code sends a response back to the client
+            if key == "q" and resource == "entries":
+                response = get_entry_by_search(value)
+      
         self.wfile.write(f"{response}".encode())
 
     # Here's a method on the class that overrides the parent's method.
@@ -126,8 +121,23 @@ class HandleRequests(BaseHTTPRequestHandler):
 
         content_len = int(self.headers.get('content-length', 0))
         post_body = self.rfile.read(content_len)
-        response = f"received post request:<br>{post_body}"
-        self.wfile.write(response.encode())
+
+        # Convert JSON string to a Python dictionary
+        post_body = json.loads(post_body)
+        # Parse the URL
+        (resource, id) = self.parse_url(self.path)
+
+        #initialize new entry
+        new_entry = None
+
+        if resource == "entries":
+            new_entry = create_journal_entry(post_body)
+        
+        self.wfile.write(f"{new_entry}".encode())
+
+
+        # response = f"received post request:<br>{post_body}"
+        # self.wfile.write(response.encode())
 
     # Here's a method on the class that overrides the parent's method.
     # It handles any PUT request.
@@ -135,8 +145,39 @@ class HandleRequests(BaseHTTPRequestHandler):
     def do_PUT(self):
         """Handles PUT requests to the server
         """
+        self._set_headers(204)
+        content_len = int(self.headers.get('content-length', 0))
+        post_body = self.rfile.read(content_len)
+        post_body = json.loads(post_body)
+
+        # Parse the URL
+        (resource, id) = self.parse_url(self.path)
+
+        if resource == "entries":
+            success = update_entry(id, post_body)
+        if success:
+            self._set_headers(204)
+        else:
+            self._set_headers(404)
+
+        # Encode the new entry and send in response
+        self.wfile.write("".encode())
         self.do_POST()
 
+    def do_DELETE(self):
+        '''handles DELETE requests'''
+    # Set a 204 response code
+        self._set_headers(204)
+
+    # Parse the URL
+        (resource, id) = self.parse_url(self.path)
+
+    # Delete a single animal from the list
+        if resource == "entries":
+            delete_entry(id)
+        
+    # Encode the new animal and send in response
+        self.wfile.write("".encode())
 
 # This function is not inside the class. It is the starting
 # point of this application.
