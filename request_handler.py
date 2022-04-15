@@ -3,6 +3,7 @@ import json
 from views import get_all_entries, get_single_entry, delete_entry
 from views import get_all_moods
 from views.entry_requests import get_entry_by_search, create_journal_entry, update_entry
+from views.tag_requests import get_all_tags
 
 # Here's a class. It inherits from another class.
 # For now, think of a class as a container for functions that
@@ -102,6 +103,9 @@ class HandleRequests(BaseHTTPRequestHandler):
 
             if resource == "moods":
                 response = f"{get_all_moods()}"
+
+            if resource == "tags":
+                response = f"{get_all_tags()}"
 
         elif len(parsed) == 3:
             (resource, key, value) = parsed

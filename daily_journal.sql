@@ -40,10 +40,10 @@ INSERT INTO `Entries` VALUES (null, "javascript", "making forms is fun", 1, "04-
 INSERT INTO `Entries` VALUES (null, "python", "coding is a lot of information", 1, "04-26-2022");
 
 
-INSERT INTO `tags` VALUES (null, "hard")
-INSERT INTO `tags` VALUES (null, "fun")
-INSERT INTO `tags` VALUES (null, "new")
-INSERT INTO `tags` VALUES (null, "confusing")
-INSERT INTO `tags` VALUES (null, "annoying")
-INSERT INTO `tags` VALUES (null, "exciting")
+INSERT INTO `tags` VALUES (null, "hard");
+INSERT INTO `tags` VALUES (null, "fun");
+INSERT INTO `tags` VALUES (null, "new");
+INSERT INTO `tags` VALUES (null, "confusing");
+INSERT INTO `tags` VALUES (null, "annoying");
+INSERT INTO `tags` VALUES (null, "exciting");
 
