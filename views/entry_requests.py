@@ -2,6 +2,7 @@ import sqlite3
 import json
 from models import Entry
 from models.mood import Mood
+from models import Entry_Tag
 
 
 def get_all_entries():
@@ -24,13 +25,28 @@ def get_all_entries():
         FROM Entries e
         JOIN Moods m
             ON m.id = e.mood_id
+        
         """)
 
         # Initialize an empty list to hold all animal representations
         entries = []
-
+        
         # Convert rows of data into a Python list
         dataset = db_cursor.fetchall()
+
+        db_cursor.execute("""
+        SELECT
+            et.id,
+            et.entry_id,
+            et.tag_id,
+            t.label tag_label
+        FROM entrytag et
+        JOIN tags t
+            on et.tag_id = t.id
+        """
+        )
+
+        entry_tags = db_cursor.fetchall()
 
         # Iterate list of data returned from database
         for row in dataset:
@@ -44,6 +60,13 @@ def get_all_entries():
             mood = Mood(row['id'], row['mood_label'])
 
             entry.mood = mood.__dict__
+
+
+            tags = []
+            for et_row in entry_tags:
+                if et_row["entry_id"] == row["id"]:
+                    tags.append(et_row["tag_id"])
+
             entries.append(entry.__dict__)
 
     # Use `json` package to properly serialize list as JSON
@@ -139,6 +162,19 @@ def create_journal_entry(new_entry):
         # was sent by the client so that the client sees the
         # primary key in the response.
         new_entry['id'] = id
+
+        #loop through the tags after adding new entry 
+        # within loop execute SQL command to INSERT a row to entry tag table
+
+        for tag in new_entry['tags']:
+
+            db_cursor.execute("""
+            INSERT INTO entrytag
+                (entry_id, tag_id)
+            VALUES
+                (?,?);
+            """, (id, tag)
+            )
 
     return json.dumps(new_entry)
 
